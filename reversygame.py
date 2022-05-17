@@ -1,4 +1,5 @@
 from dataclasses import field
+from random import randint
 from sys import get_coroutine_origin_tracking_depth
 from tkinter import Canvas, Tk, mainloop
 
@@ -11,7 +12,7 @@ BACKCOLOR = 'white'
 BOTTOMGAP = 100
 
 class ReversyLogic:
-    def __init__(self, show_field) -> None:
+    def __init__(self, show_field, mode='twogamer') -> None:
         self.running = True
         self.show_field = show_field
         self.active = 0
@@ -20,6 +21,7 @@ class ReversyLogic:
         self.field[3][3] = self.field[4][4] = 0
         self.field[4][3] = self.field[3][4] = 1
         self.players = [0, 1]
+        self.botnum = -1 if mode=='twogamer' else randint(0, 1)
         self.update()
     
     def init_dirs(self):
@@ -29,6 +31,24 @@ class ReversyLogic:
                 if not i == j == 0:
                     dirs.append ((i, j))
         return dirs
+    
+    def bestturn(self):
+        bestcells = [(0, 0), (W - 1, H - 1), (0, H - 1), (W - 1, 0)]
+        best = None
+        best_res = None
+        for x in range (W):
+            for y in range(H):
+                if not self.possible(self.active, (x, y)):
+                    continue
+                if (x, y) in bestcells:
+                    pass
+                if (best is None) or \
+                    (not best in bestcells) and ((x, y) in bestcells) or \
+                        (len(self.occuped) > best_res):
+                    best = (x, y)
+                    best_res = len(self.occuped)
+        return best
+
 
     def turn(self, coords):
         player = self.active
@@ -39,6 +59,8 @@ class ReversyLogic:
                 xc, yc = cell
                 self.field[yc][xc] = player
             self.active = self.get_active()
+            if self.active == self.botnum:
+                self.turn(self.bestturn())
         self.update()
     
     def get_active(self):
@@ -57,7 +79,8 @@ class ReversyLogic:
         return False 
     
     def possible(self, player, coords):
-        return self.running and self.isoccupedblank(player, coords)
+        x, y = coords
+        return self.running and self.field[y][x] is None and self.isoccupedblank(player, coords)
     
     def isoccupedblank(self, player, coords):
         self.occuped = []
@@ -111,8 +134,7 @@ class ReversyLogic:
 
 
 class Graphics:
-    def __init__(self) -> None:
-        
+    def __init__(self) -> None:        
         win = Tk()
         self.canvas = Canvas(win, width=CELLSIZE * W, height=CELLSIZE * H + BOTTOMGAP, bg = BACKCOLOR)
         self.info = self.canvas.create_text(CELLSIZE * W / 2, CELLSIZE * H + BOTTOMGAP / 2, \
@@ -121,7 +143,8 @@ class Graphics:
         self.checkers = []
         self.drawboard()
         self.canvas.bind_all("<Button-1>", self.get_turncoords)
-        self.logic = ReversyLogic(self.draw_field)
+        mode = 'comp'
+        self.logic = ReversyLogic(self.draw_field, mode)
         self.logic.update()
     
     def drawboard(self):
