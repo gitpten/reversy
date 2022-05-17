@@ -40,8 +40,6 @@ class ReversyLogic:
             for y in range(H):
                 if not self.possible(self.active, (x, y)):
                     continue
-                if (x, y) in bestcells:
-                    pass
                 if (best is None) or \
                     (not best in bestcells) and ((x, y) in bestcells) or \
                         (len(self.occuped) > best_res):
