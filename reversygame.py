@@ -1,6 +1,7 @@
 from dataclasses import field
 from random import randint
 from sys import get_coroutine_origin_tracking_depth
+from time import sleep
 from tkinter import Canvas, Tk, mainloop
 
 W, H = 8, 8
@@ -33,7 +34,6 @@ class ReversyLogic:
         return dirs
     
     def bestturn(self):
-        bestcells = [(0, 0), (W - 1, H - 1), (0, H - 1), (W - 1, 0)]
         best = None
         best_res = None
         for x in range (W):
@@ -41,12 +41,15 @@ class ReversyLogic:
                 if not self.possible(self.active, (x, y)):
                     continue
                 if (best is None) or \
-                    (not best in bestcells) and ((x, y) in bestcells) or \
+                    (not self.iscorner(best) and self.iscorner((x, y))) or \
                         (len(self.occuped) > best_res):
                     best = (x, y)
                     best_res = len(self.occuped)
         return best
 
+    def iscorner(self, coords):
+        x, y = coords
+        return x % 8 == 0 or y % 8 == 0
 
     def turn(self, coords):
         player = self.active
@@ -58,6 +61,8 @@ class ReversyLogic:
                 self.field[yc][xc] = player
             self.active = self.get_active()
             if self.active == self.botnum:
+                self.update()             
+                sleep(1)   
                 self.turn(self.bestturn())
         self.update()
     
