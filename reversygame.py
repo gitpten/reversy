@@ -1,6 +1,4 @@
-from dataclasses import field
 from random import randint
-from sys import get_coroutine_origin_tracking_depth
 from time import sleep
 from tkinter import Canvas, Tk, mainloop
 
@@ -19,8 +17,8 @@ class ReversyLogic:
         self.active = 0
         self.dirs = self.init_dirs()
         self.field = [[None] * W for i in range(H)]
-        self.field[3][3] = self.field[4][4] = 0
-        self.field[4][3] = self.field[3][4] = 1
+        self.field[W // 2 - 1][H // 2 - 1] = self.field[W // 2][H // 2] = 0
+        self.field[W // 2][H // 2 - 1] = self.field[W // 2 - 1][H // 2] = 1
         self.players = [0, 1]
         self.botnum = -1 if mode=='twogamer' else randint(0, 1)
         self.update()
@@ -49,7 +47,7 @@ class ReversyLogic:
 
     def iscorner(self, coords):
         x, y = coords
-        return x % 8 == 0 or y % 8 == 0
+        return x % (W - 1) == 0 and y % (H - 1) == 0
 
     def turn(self, coords):
         player = self.active
@@ -77,7 +75,7 @@ class ReversyLogic:
     def haspossibleturn(self, player):
         for x in range(W):
             for y in range(H):
-                if self.field[y][x] is None and self.possible(player, (x, y)):
+                if self.possible(player, (x, y)):
                         return True
         return False 
     
@@ -121,15 +119,6 @@ class ReversyLogic:
         else f"{'There is draw' if winner == 'draw' else f'Player#{winner} win'}"
         self.show_field(self.field, msg)
         self.running = winner is None
-
-    def neib(self, coords):
-        x0, y0 = coords
-        neib = []
-        for x in range(max(0, x0 - 1), min(W, x0 + 2)):
-            for y in range(max(0, y0 - 1), min(H, y0 + 2)):
-                if not (x0 == x and y0 == y):
-                    neib.append((x, y))
-        return neib
 
     def opponent(self, player):
         return (player + 1) % 2
